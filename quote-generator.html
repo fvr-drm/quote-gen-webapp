@@ -1,0 +1,299 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+  <meta http-equiv="Content-Style-Type" content="text/css">
+  <title></title>
+  <meta name="Generator" content="Cocoa HTML Writer">
+  <meta name="CocoaVersion" content="2685.1">
+  <style type="text/css">
+    p.p1 {margin: 0.0px 0.0px 0.0px 0.0px; font: 12.0px Helvetica}
+    p.p2 {margin: 0.0px 0.0px 0.0px 0.0px; font: 12.0px Helvetica; min-height: 14.0px}
+  </style>
+</head>
+<body>
+<p class="p1">&lt;!DOCTYPE html&gt;</p>
+<p class="p1">&lt;html lang="en"&gt;</p>
+<p class="p1">&lt;head&gt;</p>
+<p class="p1">&lt;meta charset="UTF-8" /&gt;</p>
+<p class="p1">&lt;meta name="viewport" content="width=device-width, initial-scale=1" /&gt;</p>
+<p class="p1">&lt;title&gt;Sales Quote &amp; Receipt PDF Generator&lt;/title&gt;</p>
+<p class="p1">&lt;style&gt;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>body { font-family: Arial, sans-serif; margin: 20px; background: #f9f9f9; }</p>
+<p class="p1"><span class="Apple-converted-space">  </span>h1 { color: #2563eb; }</p>
+<p class="p1"><span class="Apple-converted-space">  </span>#container { max-width: 900px; margin: auto; }</p>
+<p class="p1"><span class="Apple-converted-space">  </span>#jsonInput { margin-bottom: 20px; }</p>
+<p class="p1"><span class="Apple-converted-space">  </span>textarea {</p>
+<p class="p1"><span class="Apple-converted-space">    </span>width: 100%; height: 350px; font-family: monospace; font-size: 14px;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>padding: 10px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>resize: vertical;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>}</p>
+<p class="p1"><span class="Apple-converted-space">  </span>button, a.button {</p>
+<p class="p1"><span class="Apple-converted-space">    </span>margin-top: 10px; background: #2563eb; color: white; border: none;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>padding: 10px 20px; border-radius: 4px; cursor: pointer;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>text-decoration: none; display: inline-block;<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">  </span>}</p>
+<p class="p1"><span class="Apple-converted-space">  </span>button:disabled, a.button:disabled {</p>
+<p class="p1"><span class="Apple-converted-space">    </span>background: #999; cursor: not-allowed;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>}</p>
+<p class="p1"><span class="Apple-converted-space">  </span>.status {</p>
+<p class="p1"><span class="Apple-converted-space">    </span>margin-top: 5px; font-weight: bold;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>}</p>
+<p class="p1"><span class="Apple-converted-space">  </span>@media (max-width: 600px) {</p>
+<p class="p1"><span class="Apple-converted-space">    </span>textarea { height: 250px; }</p>
+<p class="p1"><span class="Apple-converted-space">  </span>}</p>
+<p class="p1">&lt;/style&gt;</p>
+<p class="p1">&lt;script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"&gt;&lt;/script&gt;</p>
+<p class="p1">&lt;script&gt;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>window.onload = () =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">    </span>const { jsPDF } = window.jspdf;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>const jsonInput = document.getElementById('jsonArea');</p>
+<p class="p1"><span class="Apple-converted-space">    </span>const validateBtn = document.getElementById('validateBtn');</p>
+<p class="p1"><span class="Apple-converted-space">    </span>const generateBtn = document.getElementById('generateBtn');</p>
+<p class="p1"><span class="Apple-converted-space">    </span>const downloadBtn = document.getElementById('downloadBtn');</p>
+<p class="p1"><span class="Apple-converted-space">    </span>const status = document.getElementById('status');</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>let pdfDoc = null;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>let pdfBlobUrl = null;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>function parseJson() {</p>
+<p class="p1"><span class="Apple-converted-space">      </span>try {</p>
+<p class="p1"><span class="Apple-converted-space">        </span>return JSON.parse(jsonInput.value);</p>
+<p class="p1"><span class="Apple-converted-space">      </span>} catch (e) {</p>
+<p class="p1"><span class="Apple-converted-space">        </span>return null;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>}</p>
+<p class="p1"><span class="Apple-converted-space">    </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>validateBtn.onclick = () =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">      </span>const parsed = parseJson();</p>
+<p class="p1"><span class="Apple-converted-space">      </span>if (parsed) {</p>
+<p class="p1"><span class="Apple-converted-space">        </span>status.textContent = 'Valid JSON';</p>
+<p class="p1"><span class="Apple-converted-space">        </span>status.style.color = 'green';</p>
+<p class="p1"><span class="Apple-converted-space">        </span>generateBtn.disabled = false;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>} else {</p>
+<p class="p1"><span class="Apple-converted-space">        </span>status.textContent = 'Invalid JSON. Please fix syntax errors.';</p>
+<p class="p1"><span class="Apple-converted-space">        </span>status.style.color = 'red';</p>
+<p class="p1"><span class="Apple-converted-space">        </span>generateBtn.disabled = true;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>downloadBtn.disabled = true;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>}</p>
+<p class="p1"><span class="Apple-converted-space">    </span>};</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>function addTableRow(doc, y, cols, colWidths, fontSize, isHeader = false) {</p>
+<p class="p1"><span class="Apple-converted-space">      </span>let x = 15;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>doc.setFontSize(fontSize);</p>
+<p class="p1"><span class="Apple-converted-space">      </span>cols.forEach((col, i) =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">        </span>if (isHeader) {</p>
+<p class="p1"><span class="Apple-converted-space">          </span>doc.setFont(undefined, 'bold');</p>
+<p class="p1"><span class="Apple-converted-space">          </span>doc.setTextColor(37, 99, 235);</p>
+<p class="p1"><span class="Apple-converted-space">          </span>doc.setFillColor(230, 240, 255);</p>
+<p class="p1"><span class="Apple-converted-space">          </span>doc.rect(x, y - fontSize, colWidths[i], fontSize + 8, 'F'); // filled header cell</p>
+<p class="p1"><span class="Apple-converted-space">        </span>} else {</p>
+<p class="p1"><span class="Apple-converted-space">          </span>doc.setFont(undefined, 'normal');</p>
+<p class="p1"><span class="Apple-converted-space">          </span>doc.setTextColor(0, 0, 0);</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p1"><span class="Apple-converted-space">        </span>doc.text(String(col), x + 3, y + 6);</p>
+<p class="p1"><span class="Apple-converted-space">        </span>doc.rect(x, y - fontSize, colWidths[i], fontSize + 8);</p>
+<p class="p1"><span class="Apple-converted-space">        </span>x += colWidths[i];</p>
+<p class="p1"><span class="Apple-converted-space">      </span>});</p>
+<p class="p1"><span class="Apple-converted-space">    </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>function generatePDF(json) {</p>
+<p class="p1"><span class="Apple-converted-space">      </span>pdfDoc = new jsPDF({ unit: 'pt', format: 'a4' });</p>
+<p class="p1"><span class="Apple-converted-space">      </span>const pageWidth = pdfDoc.internal.pageSize.getWidth();</p>
+<p class="p1"><span class="Apple-converted-space">      </span>const margin = 15;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>let y = 40;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>const lineHeight = 18;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>const fontSize = 12;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">      </span>// Header - Company Info</p>
+<p class="p1"><span class="Apple-converted-space">      </span>if (json.company) {</p>
+<p class="p1"><span class="Apple-converted-space">        </span>pdfDoc.setFontSize(16);</p>
+<p class="p1"><span class="Apple-converted-space">        </span>pdfDoc.setTextColor('#2563eb');</p>
+<p class="p1"><span class="Apple-converted-space">        </span>if (json.company.name) {</p>
+<p class="p1"><span class="Apple-converted-space">          </span>pdfDoc.text(json.company.name, margin, y);</p>
+<p class="p1"><span class="Apple-converted-space">          </span>y += lineHeight;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p1"><span class="Apple-converted-space">        </span>pdfDoc.setFontSize(10);</p>
+<p class="p1"><span class="Apple-converted-space">        </span>pdfDoc.setTextColor('#444');</p>
+<p class="p1"><span class="Apple-converted-space">        </span>if (json.company.address) { pdfDoc.text(json.company.address, margin, y); y += lineHeight; }</p>
+<p class="p1"><span class="Apple-converted-space">        </span>if (json.company.contact) { pdfDoc.text(json.company.contact, margin, y); y += lineHeight; }</p>
+<p class="p1"><span class="Apple-converted-space">        </span>y += 10;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">      </span>// Title and Quote/Receipt Info (top right)</p>
+<p class="p1"><span class="Apple-converted-space">      </span>pdfDoc.setFontSize(18);</p>
+<p class="p1"><span class="Apple-converted-space">      </span>pdfDoc.setTextColor('#1e40af');</p>
+<p class="p1"><span class="Apple-converted-space">      </span>const docTitle = json.title || 'Sales Document';</p>
+<p class="p1"><span class="Apple-converted-space">      </span>let titleWidth = pdfDoc.getTextWidth(docTitle);</p>
+<p class="p1"><span class="Apple-converted-space">      </span>pdfDoc.text(docTitle, pageWidth - margin - titleWidth, y);</p>
+<p class="p1"><span class="Apple-converted-space">      </span>y += lineHeight + 5;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">      </span>pdfDoc.setFontSize(fontSize);</p>
+<p class="p1"><span class="Apple-converted-space">      </span>pdfDoc.setTextColor('#000');</p>
+<p class="p1"><span class="Apple-converted-space">      </span>if (json.document_number) {</p>
+<p class="p1"><span class="Apple-converted-space">        </span>let txt = `Document #: ${json.document_number}`;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>pdfDoc.text(txt, pageWidth - margin - pdfDoc.getTextWidth(txt), y);</p>
+<p class="p1"><span class="Apple-converted-space">        </span>y += lineHeight;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>}</p>
+<p class="p1"><span class="Apple-converted-space">      </span>if (json.date) {</p>
+<p class="p1"><span class="Apple-converted-space">        </span>let txt = `Date: ${json.date}`;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>pdfDoc.text(txt, pageWidth - margin - pdfDoc.getTextWidth(txt), y);</p>
+<p class="p1"><span class="Apple-converted-space">        </span>y += lineHeight;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>}</p>
+<p class="p1"><span class="Apple-converted-space">      </span>if (json.payment_terms) {</p>
+<p class="p1"><span class="Apple-converted-space">        </span>let txt = `Terms: ${json.payment_terms}`;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>pdfDoc.text(txt, pageWidth - margin - pdfDoc.getTextWidth(txt), y);</p>
+<p class="p1"><span class="Apple-converted-space">        </span>y += lineHeight + 10;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">      </span>// Customer Info</p>
+<p class="p1"><span class="Apple-converted-space">      </span>if (json.customer) {</p>
+<p class="p1"><span class="Apple-converted-space">        </span>pdfDoc.setTextColor('#2563eb');</p>
+<p class="p1"><span class="Apple-converted-space">        </span>pdfDoc.setFontSize(14);</p>
+<p class="p1"><span class="Apple-converted-space">        </span>pdfDoc.text('Bill To:', margin, y);</p>
+<p class="p1"><span class="Apple-converted-space">        </span>y += lineHeight;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>pdfDoc.setFontSize(fontSize);</p>
+<p class="p1"><span class="Apple-converted-space">        </span>pdfDoc.setTextColor('#000');</p>
+<p class="p1"><span class="Apple-converted-space">        </span>if (json.customer.name) { pdfDoc.text(json.customer.name, margin, y); y += lineHeight; }</p>
+<p class="p1"><span class="Apple-converted-space">        </span>if (json.customer.address) { pdfDoc.text(json.customer.address, margin, y); y += lineHeight; }</p>
+<p class="p1"><span class="Apple-converted-space">        </span>if (json.customer.contact) { pdfDoc.text(json.customer.contact, margin, y); y += lineHeight + 10; }</p>
+<p class="p1"><span class="Apple-converted-space">      </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">      </span>// Items Table Header</p>
+<p class="p1"><span class="Apple-converted-space">      </span>const colWidths = [260, 60, 90, 90];</p>
+<p class="p1"><span class="Apple-converted-space">      </span>let tableY = y;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>addTableRow(pdfDoc, tableY, ['Description', 'Qty', 'Unit Price', 'Amount'], colWidths, fontSize, true);</p>
+<p class="p1"><span class="Apple-converted-space">      </span>y += lineHeight + 8;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">      </span>// Items Table Rows</p>
+<p class="p1"><span class="Apple-converted-space">      </span>if (Array.isArray(json.items)) {</p>
+<p class="p1"><span class="Apple-converted-space">        </span>json.items.forEach(item =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">          </span>addTableRow(</p>
+<p class="p1"><span class="Apple-converted-space">            </span>pdfDoc, y,</p>
+<p class="p1"><span class="Apple-converted-space">            </span>[</p>
+<p class="p1"><span class="Apple-converted-space">              </span>item.description || '',</p>
+<p class="p1"><span class="Apple-converted-space">              </span>String(item.quantity || ''),</p>
+<p class="p1"><span class="Apple-converted-space">              </span>item.unit_price ? `$${item.unit_price.toFixed(2)}` : '',</p>
+<p class="p1"><span class="Apple-converted-space">              </span>item.amount ? `$${item.amount.toFixed(2)}` : ''</p>
+<p class="p1"><span class="Apple-converted-space">            </span>],</p>
+<p class="p1"><span class="Apple-converted-space">            </span>colWidths,</p>
+<p class="p1"><span class="Apple-converted-space">            </span>fontSize</p>
+<p class="p1"><span class="Apple-converted-space">          </span>);</p>
+<p class="p1"><span class="Apple-converted-space">          </span>y += lineHeight + 8;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>// Page break check</p>
+<p class="p1"><span class="Apple-converted-space">          </span>if (y &gt; 760) {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>pdfDoc.addPage();</p>
+<p class="p1"><span class="Apple-converted-space">            </span>y = 40;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>// Repeat table header on new page</p>
+<p class="p1"><span class="Apple-converted-space">            </span>addTableRow(pdfDoc, y, ['Description', 'Qty', 'Unit Price', 'Amount'], colWidths, fontSize, true);</p>
+<p class="p1"><span class="Apple-converted-space">            </span>y += lineHeight + 8;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>}</p>
+<p class="p1"><span class="Apple-converted-space">        </span>});</p>
+<p class="p1"><span class="Apple-converted-space">      </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">      </span>// Totals</p>
+<p class="p1"><span class="Apple-converted-space">      </span>y += 15;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>if (json.totals) {</p>
+<p class="p1"><span class="Apple-converted-space">        </span>Object.entries(json.totals).forEach(([key, value]) =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">          </span>const label = key.charAt(0).toUpperCase() + key.slice(1).replace(/_/g, ' ');</p>
+<p class="p1"><span class="Apple-converted-space">          </span>const formattedValue = typeof value === 'number' ? `$${value.toFixed(2)}` : String(value);</p>
+<p class="p1"><span class="Apple-converted-space">          </span>pdfDoc.text(`${label}:`, pageWidth - margin - pdfDoc.getTextWidth(`${label}:`) - 100, y);</p>
+<p class="p1"><span class="Apple-converted-space">          </span>pdfDoc.text(formattedValue, pageWidth - margin - pdfDoc.getTextWidth(formattedValue), y);</p>
+<p class="p1"><span class="Apple-converted-space">          </span>y += lineHeight;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>});</p>
+<p class="p1"><span class="Apple-converted-space">      </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">      </span>// Footer</p>
+<p class="p1"><span class="Apple-converted-space">      </span>const footerY = 820;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>pdfDoc.setLineWidth(0.5);</p>
+<p class="p1"><span class="Apple-converted-space">      </span>pdfDoc.setDrawColor(128);</p>
+<p class="p1"><span class="Apple-converted-space">      </span>pdfDoc.line(margin, footerY, pageWidth - margin, footerY);</p>
+<p class="p1"><span class="Apple-converted-space">      </span>pdfDoc.setFontSize(10);</p>
+<p class="p1"><span class="Apple-converted-space">      </span>pdfDoc.setTextColor('#666');</p>
+<p class="p1"><span class="Apple-converted-space">      </span>pdfDoc.text(json.footer_note || 'Thank you for your business!', margin, footerY + 15);</p>
+<p class="p1"><span class="Apple-converted-space">      </span>if (json.company &amp;&amp; json.company.website) {</p>
+<p class="p1"><span class="Apple-converted-space">        </span>pdfDoc.text(`Website: ${json.company.website}`, margin, footerY + 30);</p>
+<p class="p1"><span class="Apple-converted-space">      </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">      </span>return pdfDoc;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>generateBtn.onclick = () =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">      </span>const parsed = parseJson();</p>
+<p class="p1"><span class="Apple-converted-space">      </span>if (!parsed) {</p>
+<p class="p1"><span class="Apple-converted-space">        </span>status.textContent = 'Invalid JSON. Please fix syntax errors before generating PDF.';</p>
+<p class="p1"><span class="Apple-converted-space">        </span>status.style.color = 'red';</p>
+<p class="p1"><span class="Apple-converted-space">        </span>return;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>}</p>
+<p class="p1"><span class="Apple-converted-space">      </span>status.textContent = 'Generating PDF...';</p>
+<p class="p1"><span class="Apple-converted-space">      </span>status.style.color = 'black';</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">      </span>pdfDoc = generatePDF(parsed);</p>
+<p class="p1"><span class="Apple-converted-space">      </span>status.textContent = 'PDF Generated. Ready to download.';</p>
+<p class="p1"><span class="Apple-converted-space">      </span>status.style.color = 'green';</p>
+<p class="p1"><span class="Apple-converted-space">      </span>downloadBtn.disabled = false;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">      </span>const pdfBlob = pdfDoc.output('blob');</p>
+<p class="p1"><span class="Apple-converted-space">      </span>if (pdfBlobUrl) {</p>
+<p class="p1"><span class="Apple-converted-space">        </span>URL.revokeObjectURL(pdfBlobUrl);</p>
+<p class="p1"><span class="Apple-converted-space">      </span>}</p>
+<p class="p1"><span class="Apple-converted-space">      </span>pdfBlobUrl = URL.createObjectURL(pdfBlob);</p>
+<p class="p1"><span class="Apple-converted-space">      </span>downloadBtn.href = pdfBlobUrl;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>downloadBtn.download = `sales-document-${new Date().toISOString().slice(0,10)}.pdf`;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>};</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>downloadBtn.onclick = () =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">      </span>setTimeout(() =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">        </span>if (pdfBlobUrl) {</p>
+<p class="p1"><span class="Apple-converted-space">          </span>URL.revokeObjectURL(pdfBlobUrl);</p>
+<p class="p1"><span class="Apple-converted-space">          </span>pdfBlobUrl = null;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p1"><span class="Apple-converted-space">      </span>}, 1000);</p>
+<p class="p1"><span class="Apple-converted-space">    </span>};</p>
+<p class="p1"><span class="Apple-converted-space">  </span>};</p>
+<p class="p1">&lt;/script&gt;</p>
+<p class="p1">&lt;/head&gt;</p>
+<p class="p1">&lt;body&gt;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>&lt;h1&gt;Sales Quote &amp; Receipt PDF Generator&lt;/h1&gt;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>&lt;div id="container"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;div id="jsonInput"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>&lt;label for="jsonArea"&gt;Enter Sales Quote/Receipt JSON:&lt;/label&gt;&lt;br /&gt;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>&lt;textarea id="jsonArea" name="jsonArea" placeholder='{</p>
+<p class="p1"><span class="Apple-converted-space">  </span>"company": {</p>
+<p class="p1"><span class="Apple-converted-space">    </span>"name": "Your Company Inc.",</p>
+<p class="p1"><span class="Apple-converted-space">    </span>"address": "123 Business St, Suite 100",</p>
+<p class="p1"><span class="Apple-converted-space">    </span>"contact": "Phone: 123-456-7890",</p>
+<p class="p1"><span class="Apple-converted-space">    </span>"website": "https://yourcompany.com"</p>
+<p class="p1"><span class="Apple-converted-space">  </span>},</p>
+<p class="p1"><span class="Apple-converted-space">  </span>"title": "Sales Quote",</p>
+<p class="p1"><span class="Apple-converted-space">  </span>"document_number": "Q-2025-12345",</p>
+<p class="p1"><span class="Apple-converted-space">  </span>"date": "2025-11-04",</p>
+<p class="p1"><span class="Apple-converted-space">  </span>"payment_terms": "Net 30",</p>
+<p class="p1"><span class="Apple-converted-space">  </span>"customer": {</p>
+<p class="p1"><span class="Apple-converted-space">    </span>"name": "Customer Name",</p>
+<p class="p1"><span class="Apple-converted-space">    </span>"address": "456 Client Rd, City, State, ZIP",</p>
+<p class="p1"><span class="Apple-converted-space">    </span>"contact": "Email: customer@example.com"</p>
+<p class="p1"><span class="Apple-converted-space">  </span>},</p>
+<p class="p1"><span class="Apple-converted-space">  </span>"items": [</p>
+<p class="p1"><span class="Apple-converted-space">    </span>{"description": "Product A", "quantity": 2, "unit_price": 49.99, "amount": 99.98},</p>
+<p class="p1"><span class="Apple-converted-space">    </span>{"description": "Service B", "quantity": 1, "unit_price": 200.00, "amount": 200.00}</p>
+<p class="p1"><span class="Apple-converted-space">  </span>],</p>
+<p class="p1"><span class="Apple-converted-space">  </span>"totals": {</p>
+<p class="p1"><span class="Apple-converted-space">    </span>"subtotal": 299.98,</p>
+<p class="p1"><span class="Apple-converted-space">    </span>"tax": 15.00,</p>
+<p class="p1"><span class="Apple-converted-space">    </span>"discount": 10.00,</p>
+<p class="p1"><span class="Apple-converted-space">    </span>"total_due": 304.98</p>
+<p class="p1"><span class="Apple-converted-space">  </span>},</p>
+<p class="p1"><span class="Apple-converted-space">  </span>"footer_note": "Thank you for your business!"</p>
+<p class="p1">}'&gt;&lt;/textarea&gt;&lt;br /&gt;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>&lt;button id="validateBtn"&gt;Validate JSON&lt;/button&gt;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>&lt;button id="generateBtn" disabled&gt;Generate PDF&lt;/button&gt;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>&lt;a href="#" id="downloadBtn" class="button" disabled&gt;Download PDF&lt;/a&gt;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>&lt;div id="status" class="status"&gt;&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>&lt;/div&gt;</p>
+<p class="p1">&lt;/body&gt;</p>
+<p class="p1">&lt;/html&gt;</p>
+</body>
+</html>
